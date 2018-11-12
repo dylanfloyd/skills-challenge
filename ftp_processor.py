@@ -30,7 +30,7 @@ def changeFtpDirectory(anFTP, year, newpath='/pub/data/noaa/isd-lite/'):
 
 def gz_to_df(year, gz_filename, ftp_url_dir='ftp://ftp.ncdc.noaa.gov/pub/data/noaa/isd-lite/'):
     afilepath = ftp_url_dir + str(year) + '/' + gz_filename
-    # print afilepath
+    print afilepath
     df = pd.read_csv(afilepath, compression='gzip', header=0, error_bad_lines=False, warn_bad_lines=False,
                      delim_whitespace=True)
     # df.columns = range(1, df.shape[1]+1)
@@ -118,24 +118,26 @@ def collect_annual_data(anFtp, start_yr, end_yr):
     for year in range(start_yr, end_yr, 1):
         changeFtpDirectory(anFtp, year)
         dot_gzfiles = anFtp.nlst()
-        for gzfilename in dot_gzfiles[0:2]:
-            runtime_msg = "processing " + str(gzfilename) + '...'
-            print runtime_msg
-            before = time.time()
-            adf = gz_to_df(year, gzfilename)
-            after = time.time()
-            print adf.head()
-            maxtemp = adf['AIR-TEMP'].max()
-            index = adf['AIR-TEMP'].idxmax()
-            maxtemps.append(maxtemp)
-            runtime = after - before
-            process_times.append(runtime)
-            gzfilenames.append(gzfilename)
-            month= int(adf.iloc[index, :]['MONTH'])
-            day= int(adf.iloc[index, :]['DAY'])
-            hour= int(adf.iloc[index, :]['HOUR'])
-            dates.append(pd.datetime(year=int(year), month=month, day=day, hour=hour))
-
+        for gzfilename in dot_gzfiles:
+            try:
+                runtime_msg = "processing " + str(gzfilename) + '...'
+                print runtime_msg
+                before = time.time()
+                adf = gz_to_df(year, gzfilename)
+                after = time.time()
+                # print adf.head()
+                maxtemp = adf['AIR-TEMP'].max()
+                index = adf['AIR-TEMP'].idxmax()
+                maxtemps.append(maxtemp)
+                runtime = after - before
+                process_times.append(runtime)
+                gzfilenames.append(gzfilename)
+                month= int(adf.iloc[index, :]['MONTH'])
+                day= int(adf.iloc[index, :]['DAY'])
+                hour= int(adf.iloc[index, :]['HOUR'])
+                dates.append(pd.datetime(year=int(year), month=month, day=day, hour=hour))
+            except:
+                pass
             # dataframes.append(adf)
     return [maxtemps, dates, process_times, gzfilenames]
 
@@ -162,19 +164,19 @@ def get_hottest_day_in_year(anFTP, year):
 # ftp.dir()
 
 ##################uncomment below
-print "Logging into FTP"
-ftp = login()
-ftp.cwd('/pub/data/noaa/isd-lite/2016')
-# dot_gzfiles = ftp.nlst()
-# adf = gz_to_df(2016, dot_gzfiles[0])
-output = get_hottest_day_in_year(ftp, 2016)
-maxtemps, dates, process_times, filenames = output
-df = pd.DataFrame()
-df['dates'] = dates
-df['filenames'] = filenames
-df['process_time'] = process_times
-df['maxtemp'] = maxtemps
-save_csv(df, 'max_temp_results', 'annual_max_temp_by_satellite')
+# print "Logging into FTP"
+# ftp = login()
+# ftp.cwd('/pub/data/noaa/isd-lite/2016')
+# # dot_gzfiles = ftp.nlst()
+# # adf = gz_to_df(2016, dot_gzfiles[0])
+# output = get_hottest_day_in_year(ftp, 2016)
+# maxtemps, dates, process_times, filenames = output
+# df = pd.DataFrame()
+# df['dates'] = dates
+# df['filenames'] = filenames
+# df['process_time'] = process_times
+# df['maxtemp'] = maxtemps
+# save_csv(df, 'max_temp_results', 'annual_max_temp_by_satellite')
 
 ##################uncomment above
 
@@ -183,3 +185,18 @@ save_csv(df, 'max_temp_results', 'annual_max_temp_by_satellite')
 # dfs2017 = get_multiple_dfs(2017, dot_gzfiles)
 # get_multiple_dfs(2017, dot_gzfiles[0::100])
 # dfs = get_multiple_dfs(2016, dot_gzfiles[0:2])
+
+if __name__ == '__main__':
+    print "Logging into FTP"
+    ftp = login()
+    ftp.cwd('/pub/data/noaa/isd-lite/2017')
+    # dot_gzfiles = ftp.nlst()
+    # adf = gz_to_df(2016, dot_gzfiles[0])
+    output = get_hottest_day_in_year(ftp, 2017)
+    maxtemps, dates, process_times, filenames = output
+    df = pd.DataFrame()
+    df['dates'] = dates
+    df['filenames'] = filenames
+    df['process_time'] = process_times
+    df['maxtemp'] = maxtemps
+    save_csv(df, 'max_temp_results', 'annual_max_temp_by_satellite')
