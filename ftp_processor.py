@@ -1,10 +1,13 @@
 from ftplib import FTP
+from math import floor
 import pandas as pd
 import numpy as np
 import os
 import time
 
+
 ftp_url = 'ftp://ftp.ncdc.noaa.gov/pub/data/noaa/isd-lite/'
+PCT_SATELLITES = 100
 col_names = ['YEAR',
              'MONTH',
              'DAY',
@@ -90,6 +93,8 @@ def collect_annual_data(anFtp, start_yr, end_yr, saveCSV=True):
     for year in range(start_yr, end_yr, 1):
         changeFtpDirectory(anFtp, year)
         dot_gzfiles = anFtp.nlst()
+        max_satellites = max(1, int(floor(len(dot_gzfiles)*PCT_SATELLITES/100)))
+        dot_gzfiles = dot_gzfiles[0:max_satellites]
         num_files = len(dot_gzfiles)
         i = 0
         for gzfilename in dot_gzfiles:
